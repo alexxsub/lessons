@@ -1,7 +1,8 @@
 <template>
   <div>
     <!-- Описываем поле вводы и вешаем обработчик на нажатие клавиши Enter -->
-    <input placeholder="Введите номер" v-model="newPhone.number" />
+    <input placeholder="Введите номер" ref="number" v-model="newPhone.number" />
+    <!--Добавляем референс в атрибуте ref чтобы иметь доступ к элементу по пути this.$refs.<имя>-->
     <input placeholder="Введите имя" v-model="newPhone.name" @keyup.enter="addPhone" />
     <ul>
       <!-- Уже знакомый вывод списком-->
@@ -30,6 +31,7 @@ export default {
       this.phones.push(this.newPhone); //нам не надо заботится о выводе новых данных
       //как только элемент будет добавлен в массив, он появится в списке
       this.newPhone = { number: "", name: "" }; // затираем переменную ввода
+      this.$refs.number.focus(); //переводим фокус на поле ввода номера
     }
   }
 };
