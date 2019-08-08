@@ -1,0 +1,18 @@
+{
+  "name": "apollo-graphql",
+  "version": "1.0.0",
+  "description": "Demo basics grphql apollo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js localhost 4000"
+  },
+  "author": "Alexei Subbotin",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server": "^2.8.1",
+    "graphql": "^14.4.2",
+    "nodemon": "^1.19.1",
+    "npm": "^6.10.2"
+  }
+}
