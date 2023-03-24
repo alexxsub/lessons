@@ -1,4 +1,5 @@
-const { ApolloServer, gql } = require("apollo-server");
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 
 var _phones = [
   { number: "5555", name: "John" },
@@ -7,7 +8,7 @@ var _phones = [
   { number: "1234", name: "Sara" }
 ];
 // Construct a schema, using GraphQL schema language
-const typeDefs = gql`
+const typeDefs = `
   type Phone {
     number: String
     name: String
@@ -29,6 +30,9 @@ const server = new ApolloServer({
   resolvers
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 4000 },
 });
+
+console.log(`🚀  Server ready at: ${url}`);
