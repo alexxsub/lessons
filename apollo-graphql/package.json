@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js localhost 4000"
   },
-  "author": "Alexei Subbotin",
+  "author": "Alexx Sub",
   "license": "MIT",
   "dependencies": {
     "apollo-server": "^2.8.1",
