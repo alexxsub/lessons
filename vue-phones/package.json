@@ -1,6 +1,9 @@
 {
   "name": "vue-phones",
   "version": "0.1.0",
+  "description": "Demo basics vue framework",
+  "author": "Alexx Sub",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
