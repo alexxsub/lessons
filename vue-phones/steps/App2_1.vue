@@ -1,3 +1,4 @@
+<!--этот пример в стиле composition vue 3-->
 <script lang="js" setup>
 import { ref } from "vue";
 const todos = ref([
