@@ -2,14 +2,14 @@
   "name": "apollo-graphql",
   "version": "1.0.0",
   "description": "Demo basics grphql apollo",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
-  },
   "author": "Alexx Sub",
   "license": "MIT",
   "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js localhost 9000"
+  },
   "dependencies": {
     "@apollo/server": "^4.5.0",
     "graphql": "^15.8.0"
