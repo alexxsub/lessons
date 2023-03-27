@@ -1,9 +1,9 @@
 <script setup>
 
-import { useQuery } from '@vue/apollo-composable'
+import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
-import { ref } from "vue";
+import { ref,computed } from "vue";
 //Объявляем переменную реактивной
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
@@ -12,21 +12,23 @@ const newPhone = ref({
   name: "",
 });
 //массив с данными, обычный массив и его тоже объявляем реактивным
-const phones = ref([]);
+//const phones = ref([]);
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
 //индекс редактируемого элемента 
 const index = ref(-1); 
 
-const { result,loading, error } = useQuery(gql`
+const GET_PHONES = gql`
       query getPhones {
         Phones {
           number
           name
         }
       }
-    `)
+    `;
+const { result,loading, error } = useQuery(GET_PHONES)
 
+const phones = computed(() => result.value?.Phones ?? [])
 
 function addPhone() {
   //видимость переменных получаем без this
@@ -53,11 +55,28 @@ function resetPhone() {
 }
 
 function deletePhone(item) {
-  //ищем выбранный элемент массива и удаляем
-  const index = phones.value.indexOf(item);
-  phones.value.splice(index, 1);
+//описываем на gql языке запрос
+const DELETE_PHONE = gql`
+mutation deletePhone ($number: String!) {
+  deletePhone (number: $number) {
+          number,
+          name
+        }
+}`
+//создаем мутацию и функцию для вызова 
+const { mutate:runDeletePhone } = useMutation(DELETE_PHONE);
+//выполняем функцию мутацию
+runDeletePhone({
+    number: item.number,
+  },{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
+  }
+)
 }
-
 function setPhone(item) {
   // данная функция при режиме редактирования устанавливает в полях данные для редактирования
   //вычисляем индекс и сохраняем в переменной
@@ -93,7 +112,7 @@ function setPhone(item) {
     <div v-else-if="error">Ошибка: {{ error.message }}</div>
     <ul v-else-if="result && result.Phones">
       <!-- Уже знакомый вывод списком-->
-      <li v-for="phone in result.Phones" :key="phone">
+      <li v-for="phone in phones" :key="phone">
         <a href="#" @click="setPhone(phone)">{{ phone.number }}</a>
         {{ phone.name }}
         <button @click="deletePhone(phone)">x</button>

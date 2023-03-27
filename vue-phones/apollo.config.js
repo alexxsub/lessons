@@ -8,8 +8,8 @@ module.exports = {
       },
       // Files processed by the extension
       includes: [
-        'src/**/*.vue',
-        'src/**/*.js',
+        'src/*.vue',
+        'src/*.js',
       ],
     },
   }
