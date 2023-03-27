@@ -60,8 +60,11 @@ const resolvers = {
       return _phones;
     },
     deletePhone: (_, { number }) => {
-      _phones.splice(_phones.findIndex(x => x.number === number), 1);
-      return _phones;
+      var res = []
+      const numberi= _phones.findIndex(x => x.number === number)
+      res.push(_phones[numberi])
+      _phones.splice(numberi, 1);
+      return res;
     },
     updatePhone: (_, { number, name }) => {
       const numberi = _phones.findIndex(x => x.number === number);
