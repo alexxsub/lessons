@@ -110,13 +110,13 @@ function setPhone(item) {
     <div v-if="loading">Загрузка...</div>
     <!--Вывод сообщения, если ошибка-->
     <div v-else-if="error">Ошибка: {{ error.message }}</div>
-    <ul v-else-if="result && result.Phones">
+    <table v-else-if="result && result.Phones">
       <!-- Уже знакомый вывод списком-->
-      <li v-for="phone in phones" :key="phone">
-        <a href="#" @click="setPhone(phone)">{{ phone.number }}</a>
-        {{ phone.name }}
-        <button @click="deletePhone(phone)">x</button>
-      </li>
-    </ul>
+      <tr v-for="phone in phones" :key="phone">
+        <td><a href="#" @click="setPhone(phone)">{{ phone.number }}</a></td>
+        <td>{{ phone.name }}</td>
+        <td><button @click="deletePhone(phone)">x</button></td>
+      </tr>
+    </table>
   </div>
 </template>
