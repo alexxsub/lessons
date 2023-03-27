@@ -1,4 +1,17 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp, h } from "vue";
+import { provideApolloClient } from "@vue/apollo-composable";
+import App from "./App.vue";
+import { apolloClient } from "./ApolloClient";
 
-createApp(App).mount('#app')
+
+const app = createApp({
+  setup() {
+    provideApolloClient(apolloClient);
+  },
+  render: () => h(App),
+});
+
+
+app.mount("#app");
+
+//sudo ss -tulpn | grep :8080

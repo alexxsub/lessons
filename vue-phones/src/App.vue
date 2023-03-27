@@ -1,5 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
+
+import { useQuery } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
+
+import { ref } from "vue";
 //Объявляем переменную реактивной
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
@@ -13,6 +17,16 @@ const phones = ref([]);
 const editmode = ref(false);
 //индекс редактируемого элемента 
 const index = ref(-1); 
+
+const { result,loading, error } = useQuery(gql`
+      query getPhones {
+        Phones {
+          number
+          name
+        }
+      }
+    `)
+
 
 function addPhone() {
   //видимость переменных получаем без this
@@ -53,24 +67,7 @@ function setPhone(item) {
   //включаем режим редактирования, появляются кнопки
   editmode.value = true;
 }
-//первичная инициализация
-onMounted(() => {
-  // инициализация демо данными
-  phones.value = [
-    {
-      number: "8903888777666",
-      name: "Петя",
-    },
-    {
-      number: "8920888333222",
-      name: "Вася",
-    },
-    {
-      number: "8909222333888",
-      name: "Маша",
-    },
-  ];
-});
+
 </script>
 
 <template>
@@ -90,9 +87,13 @@ onMounted(() => {
     />
     <button v-show="editmode" @click="savePhone">Сохранить</button>
     <button v-show="editmode" @click="resetPhone">Отмена</button>
-    <ul>
+    <!--вывод сообщения, если загрузка-->
+    <div v-if="loading">Загрузка...</div>
+    <!--Вывод сообщения, если ошибка-->
+    <div v-else-if="error">Ошибка: {{ error.message }}</div>
+    <ul v-else-if="result && result.Phones">
       <!-- Уже знакомый вывод списком-->
-      <li v-for="phone in phones" :key="phone">
+      <li v-for="phone in result.Phones" :key="phone">
         <a href="#" @click="setPhone(phone)">{{ phone.number }}</a>
         {{ phone.name }}
         <button @click="deletePhone(phone)">x</button>
