@@ -4,15 +4,14 @@ import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
 import { ref,computed } from "vue";
-//Объявляем переменную реактивной
+//Объявляем переменную реактивной, это указатель для фокуса
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
 const newPhone = ref({
   number: "",
   name: "",
 });
-//массив с данными, обычный массив и его тоже объявляем реактивным
-//const phones = ref([]);
+
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
 //индекс редактируемого элемента 
@@ -28,6 +27,7 @@ const GET_PHONES = gql`
     `;
 const { result,loading, error } = useQuery(GET_PHONES)
 
+//массив с данными получаем с сервера  как результат выполнения запроса
 const phones = computed(() => result.value?.Phones ?? [])
 
 function addPhone() {
