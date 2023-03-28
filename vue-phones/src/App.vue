@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
-import { ref,computed } from "vue";
+import { ref,computed} from "vue";
 //Объявляем переменную реактивной, это указатель для фокуса
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
@@ -31,19 +31,59 @@ const { result,loading, error } = useQuery(GET_PHONES)
 const phones = computed(() => result.value?.Phones ?? [])
 
 function addPhone() {
-  //видимость переменных получаем без this
-  phones.value.push(newPhone.value); //нам не надо заботится о выводе новых данных
-  //как только элемент будет добавлен в массив, он появится в списке
-  newPhone.value = { number: "", name: "" }; // затираем переменную ввода
-  inputnumber.value.focus(); //переносим фокус в поле номер
+ //описываем на gql языке запрос на добавление
+const ADD_PHONE = gql`
+mutation addPhone ($input:inputPhone!) {
+  addPhone (input: $input) {
+          number,
+          name
+        }
+}`
+const { mutate:runAddPhone,onDone } = useMutation(ADD_PHONE);
+runAddPhone({
+    input:newPhone.value
+  },{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
+  }
+)
+//Обрабатываем событие успешного действия
+  onDone(() => {
+      resetPhone(); //очищаем все поля
+    })
+    
 }
 
 function savePhone() {
-  //сохраняем данные, только если индекс имеется, т.е. >-1
-  if (index.value > -1) {
-    Object.assign(phones.value[index.value], newPhone.value);
-    resetPhone(); //очищаем все поля
+//описываем на gql языке запрос на обновление
+const UPDATE_PHONE = gql`
+mutation updatePhone ($number: String!,$name:String!) {
+  updatePhone (number: $number,name:$name) {
+          number,
+          name
+        }
+}`
+const { mutate:runUpdatePhone,onDone } = useMutation(UPDATE_PHONE);
+runUpdatePhone({
+    number: newPhone.value.number,
+    name:newPhone.value.name
+  },{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
   }
+)
+//Обрабатываем событие успешного действия
+  onDone(() => {
+      resetPhone(); //очищаем все поля
+    })
+    
+  
 }
 
 function resetPhone() {
@@ -55,7 +95,7 @@ function resetPhone() {
 }
 
 function deletePhone(item) {
-//описываем на gql языке запрос
+//описываем на gql языке запрос на удаление
 const DELETE_PHONE = gql`
 mutation deletePhone ($number: String!) {
   deletePhone (number: $number) {
