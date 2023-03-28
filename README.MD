@@ -24,7 +24,7 @@ cd apollo-graphql
 npm run start
 ```
 
-### Запуск fronend 
+### Запуск frontend 
 
 ```sh
 cd ..
@@ -47,10 +47,10 @@ git checkout vue2
 ### примеры vue3 composition API
 
 ```sh
-git checkout vue2
+git checkout vue3
 ```
 
-### Мутации
+### Мутации на бэкенде
 
 ```sh
 git checkout mutation
