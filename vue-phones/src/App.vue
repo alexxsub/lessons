@@ -8,18 +8,19 @@ import { ref,computed} from "vue";
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
 const newPhone = ref({
+  id:"",
   number: "",
   name: "",
 });
 
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
-//индекс редактируемого элемента 
-const index = ref(-1); 
+
 
 const GET_PHONES = gql`
       query getPhones {
         Phones {
+          id,
           number
           name
         }
@@ -35,6 +36,7 @@ function addPhone() {
 const ADD_PHONE = gql`
 mutation addPhone ($input:inputPhone!) {
   addPhone (input: $input) {
+          id,
           number,
           name
         }
@@ -60,16 +62,17 @@ runAddPhone({
 function savePhone() {
 //описываем на gql языке запрос на обновление
 const UPDATE_PHONE = gql`
-mutation updatePhone ($number: String!,$name:String!) {
-  updatePhone (number: $number,name:$name) {
+mutation updatePhone ($input:inputPhone!) {
+  updatePhone (input: $input) {
+          id,
           number,
           name
         }
 }`
 const { mutate:runUpdatePhone,onDone } = useMutation(UPDATE_PHONE);
 runUpdatePhone({
-    number: newPhone.value.number,
-    name:newPhone.value.name
+    input: newPhone.value,
+
   },{
     refetchQueries:[
       {
@@ -88,26 +91,31 @@ runUpdatePhone({
 
 function resetPhone() {
   //тут обнуляем переменные и приводим все в исходное состояние
-  newPhone.value = { number: "", name: "" }; // затираем переменную ввода
+  for (var key in newPhone.value) { // затираем переменную ввода
+    newPhone.value[key]=""
+    }
+  
   inputnumber.value.focus();
   editmode.value = false; //выключаем режим редактирования
-  index.value = -1;
+
 }
 
-function deletePhone(item) {
+function deletePhone(id) {
 //описываем на gql языке запрос на удаление
 const DELETE_PHONE = gql`
-mutation deletePhone ($number: String!) {
-  deletePhone (number: $number) {
+mutation deletePhone ($id: ID!) {
+  deletePhone (id: $id) {
+          id,
           number,
           name
         }
 }`
 //создаем мутацию и функцию для вызова 
 const { mutate:runDeletePhone } = useMutation(DELETE_PHONE);
+
 //выполняем функцию мутацию
 runDeletePhone({
-    number: item.number,
+    id
   },{
     refetchQueries:[
       {
@@ -119,10 +127,10 @@ runDeletePhone({
 }
 function setPhone(item) {
   // данная функция при режиме редактирования устанавливает в полях данные для редактирования
-  //вычисляем индекс и сохраняем в переменной
-  index.value = phones.value.indexOf(item);
+
   //для вывода данных в полях, выводим их в связных переменных
   newPhone.value = Object.assign({}, item);
+  delete  newPhone.value.__typename
   //включаем режим редактирования, появляются кнопки
   editmode.value = true;
 }
@@ -152,10 +160,10 @@ function setPhone(item) {
     <div v-else-if="error">Ошибка: {{ error.message }}</div>
     <table v-else-if="result && result.Phones">
       <!-- Уже знакомый вывод списком-->
-      <tr v-for="phone in phones" :key="phone">
+      <tr v-for="phone in phones" :key="phone.id">
         <td><a href="#" @click="setPhone(phone)">{{ phone.number }}</a></td>
         <td>{{ phone.name }}</td>
-        <td><button @click="deletePhone(phone)">x</button></td>
+        <td><button @click="deletePhone(phone.id)">x</button></td>
       </tr>
     </table>
   </div>
