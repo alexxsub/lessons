@@ -32,6 +32,7 @@ const { result,loading, error } = useQuery(GET_PHONES)
 const phones = computed(() => result.value?.Phones ?? [])
 
 function addPhone() {
+ if (editmode.value) return; // отключаем просто добавление в режиме редактиварония
  //описываем на gql языке запрос на добавление
 const ADD_PHONE = gql`
 mutation addPhone ($input:inputPhone!) {
