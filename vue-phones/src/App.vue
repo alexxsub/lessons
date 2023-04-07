@@ -1,5 +1,7 @@
 <script setup>
 
+
+
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
@@ -42,23 +44,44 @@ mutation addPhone ($input:inputPhone!) {
           name
         }
 }`
-const { mutate:runAddPhone,onDone } = useMutation(ADD_PHONE);
+const { mutate:runAddPhone,onDone,onError } = useMutation(ADD_PHONE,
+{
+  update: (cache, { data: {addPhone } }) => {
+       
+    let data = cache.readQuery({ query: GET_PHONES })
+
+        data = {
+          ...data,
+          Phones: [
+            ...data.Phones,
+            addPhone,
+          ],
+        }
+
+        cache.writeQuery({ query: GET_PHONES, data })
+  }
+}
+);
 runAddPhone({
     input:newPhone.value
-  },{
+  },/*{
     refetchQueries:[
       {
         query: GET_PHONES
     }
   ]
-  }
+  }*/
 )
+  onError((e)=>{
+    console.log(e.message)
+  })
 //Обрабатываем событие успешного действия
   onDone(() => {
       resetPhone(); //очищаем все поля
     })
     
 }
+
 
 function savePhone() {
 //описываем на gql языке запрос на обновление
@@ -73,13 +96,6 @@ mutation updatePhone ($input:inputPhone!) {
 const { mutate:runUpdatePhone,onDone } = useMutation(UPDATE_PHONE);
 runUpdatePhone({
     input: newPhone.value,
-
-  },{
-    refetchQueries:[
-      {
-        query: GET_PHONES
-    }
-  ]
   }
 )
 //Обрабатываем событие успешного действия
@@ -92,7 +108,7 @@ runUpdatePhone({
 
 function resetPhone() {
   //тут обнуляем переменные и приводим все в исходное состояние
-  for (var key in newPhone.value) { // затираем переменную ввода
+  for (var key in newPhone.value) { // затираем переменную ввода , перебирая все элементы
     newPhone.value[key]=""
     }
   
@@ -112,19 +128,36 @@ mutation deletePhone ($id: ID!) {
         }
 }`
 //создаем мутацию и функцию для вызова 
-const { mutate:runDeletePhone } = useMutation(DELETE_PHONE);
+const { mutate:runDeletePhone,onError  } = useMutation(DELETE_PHONE,
+{
+  update: (cache, {data}) => {
+    //читаем кэш   
+    const {Phones} = cache.readQuery({ query: GET_PHONES })
+   //удаляем запись из кэша
+    cache.writeQuery({ query: GET_PHONES,
+        data:{
+          Phones: Phones.filter(phone=>phone.id!==data.deletePhone.id)
+        }
+        } )
+  }
+}
+);
 
 //выполняем функцию мутацию
 runDeletePhone({
     id
-  },{
+  },/*{
     refetchQueries:[
       {
         query: GET_PHONES
     }
   ]
-  }
+  }*/
 )
+
+onError((e)=>{
+    console.log(e.message)
+  })
 }
 function setPhone(item) {
   // данная функция при режиме редактирования устанавливает в полях данные для редактирования

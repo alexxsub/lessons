@@ -9,7 +9,21 @@ const httpLink = createHttpLink({
 })
 
 // Активируем кеш в памяти
-const cache = new InMemoryCache()
+const cache = new InMemoryCache(
+  {
+    typePolicies: {
+      Query: {
+        fields: {
+          Phones: {
+            merge(existing, incoming) {
+              return incoming;
+            }
+        },
+      }
+    }
+  }
+}
+)
 
 // создаем экземпляр клиента
 export const apolloClient = new ApolloClient({
