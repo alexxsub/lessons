@@ -192,7 +192,7 @@ function setPhone(item) {
     <div v-if="loading">Загрузка...</div>
     <!--Вывод сообщения, если ошибка-->
     <div v-else-if="error">Ошибка: {{ error.message }}</div>
-    <table v-else-if="result && result.Phones">
+    <table width="350px" v-else-if="result && result.Phones">
       <!-- Уже знакомый вывод списком-->
       <tr v-for="phone in phones" :key="phone.id">
         <td><a href="#" @click="setPhone(phone)">{{ phone.number }}</a></td>
