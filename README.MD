@@ -1,8 +1,17 @@
-# vue3-apollo4-phonebook
+# vue3 apollo4 phonebook 
 ## Уроки по изучению vue и GraphQL
 
-### Vue3 phonebook приложение
-Реализация простого интерфейса vue телефонного справочника без дизайна
+### Vue3 phonebook  CRUD приложение
+Реализация простого интерфейса vue телефонного справочника без дизайна.
+Стек технологий
+[VUE](https://vuejs.org/)
+[Apollo VUE client](https://apollo.vuejs.org/)
+[GraphQL](https://graphql.org/)
+[ApolloGraphQL](https://www.apollographql.com/)
+[MongoDB](https://www.mongodb.com/)
+[Mongoose](https://mongoosejs.com/)
+
+
 
 ## IDE настройки
 
