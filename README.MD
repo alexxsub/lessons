@@ -17,12 +17,13 @@ cd lessons
 npm install
 ```
 
-### Запуск backenda
+### Запуск backend
 
 ```sh
 cd apollo-graphql
 npm run start
 ```
+Открыть http://localhost:9000
 
 ### Запуск frontend 
 
@@ -31,8 +32,9 @@ cd ..
 cd vue-phones
 npm run serve
 ```
+открыть http://localhost:8080
 
-## Описание ветвей
+## Описание ветвей из каталога lessons
 
 ### окончательное приложение
 ```sh
@@ -79,8 +81,25 @@ git checkout backend
 git checkout mutation
 ```
 ### строим мутации на backend
-окончательная реализация
+окончательная реализация методов
 ```sh
 git checkout backend-mutation
 ```
+
+### подключаем mongodb через ORM mongoose
+
+```sh
+git checkout mongodb
+```
+Запуск MongoDB сервера (требуется docker и docker compose) 
+```sh
+docker compose up -d
+```
+
+### адаптируем apolloclient в vue для работы с Apollo API + MoongoDB
+
+```sh
+git checkout vuemongo
+```
+
 
