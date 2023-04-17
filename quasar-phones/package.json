@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "@vue/apollo-composable": "^4.0.0-beta.4",
     "core-js": "^3.6.5",
+    "graphql-tag": "^2.12.6",
     "quasar": "^2.6.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"

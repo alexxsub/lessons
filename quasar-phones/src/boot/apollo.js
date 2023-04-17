@@ -6,6 +6,7 @@ export default boot(
   /* async */ ({ app }) => {
     // Default client.
     const options = /* await */ getClientOptions(/* {app, router ...} */)
+    console.log(options)
     const apolloClient = new ApolloClient(options)
     // // Additional client `clientA`
     // const optionsA = { ...options }

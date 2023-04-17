@@ -1,10 +1,26 @@
 
+import MainLayout from 'layouts/MainLayout.vue'
+import IndexPage from 'pages/IndexPage.vue' 
 const routes = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: MainLayout,
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      { 
+        path: '',
+        name:'Home',     
+        component: IndexPage
+      },
+      { 
+        path: 'plan',
+        name:'Plan',
+        component: () => import('pages/PlanPage.vue') 
+      },
+      { 
+        path: '/phonebook', 
+        name:'PhoneBook',
+        component: () => import('pages/PhoneBook.vue') 
+      }
     ]
   },
 
@@ -12,6 +28,7 @@ const routes = [
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
+    name:'NotFound',
     component: () => import('pages/ErrorNotFound.vue')
   }
 ]

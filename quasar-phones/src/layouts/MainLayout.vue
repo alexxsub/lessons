@@ -50,29 +50,35 @@ import { defineComponent, ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 
 const linksList = [
+{
+    title: 'В начало',
+    caption: '',
+    icon: 'home',
+    link: ''
+  },
   {
     title: 'Документация',
-    caption: 'quasar.dev',
+    caption: 'Сайт разработчиков quasar',
     icon: 'school',
     link: 'https://quasar.dev'
   },
   {
     title: 'Github Lessons',
-    caption: 'github.com/quasarframework',
+    caption: 'Репозиторий с примером',
     icon: 'code',
-    link: 'https://github.com/quasarframework'
+    link: 'https://github.com/alexxsub/lessons.git'
   },
   {
     title: 'План',
     caption: 'План уроков',
     icon: 'menu_book',
-    link: 'https://chat.quasar.dev'
+    link: 'plan'
   },
   {
     title: 'Приложение',
     caption: 'Quasar phonebook',
     icon: 'call',
-    link: 'https://forum.quasar.dev'
+    link: 'phonebook'
   }
 ]
 
