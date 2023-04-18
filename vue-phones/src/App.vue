@@ -1,7 +1,5 @@
 <script setup>
 
-
-
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 

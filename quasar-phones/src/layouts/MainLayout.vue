@@ -54,7 +54,7 @@ const linksList = [
     title: 'В начало',
     caption: '',
     icon: 'home',
-    link: ''
+    link: '/'
   },
   {
     title: 'Документация',

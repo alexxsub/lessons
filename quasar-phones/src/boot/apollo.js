@@ -2,12 +2,12 @@ import { ApolloClient /*, createHttpLink */ } from '@apollo/client/core'
 import { ApolloClients } from '@vue/apollo-composable'
 import { boot } from 'quasar/wrappers'
 import { getClientOptions } from 'src/apollo'
+ // Default client.
+ const options = /* await */ getClientOptions(/* {app, router ...} */)
+ const apolloClient = new ApolloClient(options)
 export default boot(
   /* async */ ({ app }) => {
-    // Default client.
-    const options = /* await */ getClientOptions(/* {app, router ...} */)
-    console.log(options)
-    const apolloClient = new ApolloClient(options)
+   
     // // Additional client `clientA`
     // const optionsA = { ...options }
     // // Modify options as needed.
@@ -26,3 +26,5 @@ export default boot(
     app.provide(ApolloClients, apolloClients)
   }
 )
+
+export { apolloClient};
