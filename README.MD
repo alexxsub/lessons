@@ -111,4 +111,8 @@ docker compose up -d
 git checkout vuemongo
 ```
 
+### фронтенд на Quasar - material design
 
+```sh
+git checkout quasar
+```
