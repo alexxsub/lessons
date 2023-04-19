@@ -1,3 +1,51 @@
+<script setup>
+import { ref } from 'vue'
+import EssentialLink from 'components/EssentialLink.vue'
+
+//переменная для открывания или закрывания меню
+const leftDrawerOpen = ref(false)
+
+//функция - переключатель меню
+function toggleLeftDrawer () {
+        leftDrawerOpen.value = !leftDrawerOpen.value
+      }
+
+//массив с данными меню слева      
+const linksList = [
+{
+    title: 'В начало',
+    caption: '',
+    icon: 'home',
+    link: '/'
+  },
+  {
+    title: 'Документация',
+    caption: 'Сайт разработчиков quasar',
+    icon: 'school',
+    link: 'https://quasar.dev'
+  },
+  {
+    title: 'Github Lessons',
+    caption: 'Репозиторий с примером',
+    icon: 'code',
+    link: 'https://github.com/alexxsub/lessons.git'
+  },
+  {
+    title: 'План',
+    caption: 'План уроков',
+    icon: 'menu_book',
+    link: 'plan'
+  },
+  {
+    title: 'Приложение',
+    caption: 'Quasar phonebook',
+    icon: 'call',
+    link: 'phonebook'
+  }
+]
+   
+</script>
+
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
@@ -32,7 +80,7 @@
         </q-item-label>
 
         <EssentialLink
-          v-for="link in essentialLinks"
+          v-for="link in linksList"
           :key="link.title"
           v-bind="link"
         />
@@ -45,60 +93,3 @@
   </q-layout>
 </template>
 
-<script>
-import { defineComponent, ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
-
-const linksList = [
-{
-    title: 'В начало',
-    caption: '',
-    icon: 'home',
-    link: '/'
-  },
-  {
-    title: 'Документация',
-    caption: 'Сайт разработчиков quasar',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github Lessons',
-    caption: 'Репозиторий с примером',
-    icon: 'code',
-    link: 'https://github.com/alexxsub/lessons.git'
-  },
-  {
-    title: 'План',
-    caption: 'План уроков',
-    icon: 'menu_book',
-    link: 'plan'
-  },
-  {
-    title: 'Приложение',
-    caption: 'Quasar phonebook',
-    icon: 'call',
-    link: 'phonebook'
-  }
-]
-
-export default defineComponent({
-  name: 'MainLayout',
-
-  components: {
-    EssentialLink
-  },
-
-  setup () {
-    const leftDrawerOpen = ref(false)
-
-    return {
-      essentialLinks: linksList,
-      leftDrawerOpen,
-      toggleLeftDrawer () {
-        leftDrawerOpen.value = !leftDrawerOpen.value
-      }
-    }
-  }
-})
-</script>
