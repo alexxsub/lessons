@@ -1,69 +1,168 @@
 <script setup>
 
-import { useQuery } from '@vue/apollo-composable'
+import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
-import { ref } from "vue";
-//Объявляем переменную реактивной
+import { ref,computed} from "vue";
+//Объявляем переменную реактивной, это указатель для фокуса
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
 const newPhone = ref({
+  id:"",
   number: "",
   name: "",
 });
-//массив с данными, обычный массив и его тоже объявляем реактивным
-const phones = ref([]);
+
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
-//индекс редактируемого элемента 
-const index = ref(-1); 
 
-const { result,loading, error } = useQuery(gql`
+
+const GET_PHONES = gql`
       query getPhones {
         Phones {
+          id,
           number
           name
         }
       }
-    `)
+    `;
+const { result,loading, error } = useQuery(GET_PHONES)
 
+//массив с данными получаем с сервера  как результат выполнения запроса
+const phones = computed(() => result.value?.Phones ?? [])
 
 function addPhone() {
-  //видимость переменных получаем без this
-  phones.value.push(newPhone.value); //нам не надо заботится о выводе новых данных
-  //как только элемент будет добавлен в массив, он появится в списке
-  newPhone.value = { number: "", name: "" }; // затираем переменную ввода
-  inputnumber.value.focus(); //переносим фокус в поле номер
+ if (editmode.value) return; // отключаем просто добавление в режиме редактиварония
+ //описываем на gql языке запрос на добавление
+const ADD_PHONE = gql`
+mutation addPhone ($input:inputPhone!) {
+  addPhone (input: $input) {
+          id,
+          number,
+          name
+        }
+}`
+const { mutate:runAddPhone,onDone,onError } = useMutation(ADD_PHONE,
+{
+  update: (cache, { data: {addPhone } }) => {
+       
+    let data = cache.readQuery({ query: GET_PHONES })
+
+        data = {
+          ...data,
+          Phones: [
+            ...data.Phones,
+            addPhone,
+          ],
+        }
+
+        cache.writeQuery({ query: GET_PHONES, data })
+  }
+}
+);
+runAddPhone({
+    input:newPhone.value
+  },/*{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
+  }*/
+)
+  onError((e)=>{
+    console.log(e.message)
+  })
+//Обрабатываем событие успешного действия
+  onDone(() => {
+      resetPhone(); //очищаем все поля
+    })
+    
 }
 
+
 function savePhone() {
-  //сохраняем данные, только если индекс имеется, т.е. >-1
-  if (index.value > -1) {
-    Object.assign(phones.value[index.value], newPhone.value);
-    resetPhone(); //очищаем все поля
+//описываем на gql языке запрос на обновление
+const UPDATE_PHONE = gql`
+mutation updatePhone ($input:inputPhone!) {
+  updatePhone (input: $input) {
+          id,
+          number,
+          name
+        }
+}`
+const { mutate:runUpdatePhone,onDone } = useMutation(UPDATE_PHONE);
+runUpdatePhone({
+    input: newPhone.value,
   }
+)
+//Обрабатываем событие успешного действия
+  onDone(() => {
+      resetPhone(); //очищаем все поля
+    })
+    
+  
 }
 
 function resetPhone() {
   //тут обнуляем переменные и приводим все в исходное состояние
-  newPhone.value = { number: "", name: "" }; // затираем переменную ввода
+  for (var key in newPhone.value) { // затираем переменную ввода , перебирая все элементы
+    newPhone.value[key]=""
+    }
+  
   inputnumber.value.focus();
   editmode.value = false; //выключаем режим редактирования
-  index.value = -1;
+
 }
 
-function deletePhone(item) {
-  //ищем выбранный элемент массива и удаляем
-  const index = phones.value.indexOf(item);
-  phones.value.splice(index, 1);
+function deletePhone(id) {
+//описываем на gql языке запрос на удаление
+const DELETE_PHONE = gql`
+mutation deletePhone ($id: ID!) {
+  deletePhone (id: $id) {
+          id,
+          number,
+          name
+        }
+}`
+//создаем мутацию и функцию для вызова 
+const { mutate:runDeletePhone,onError  } = useMutation(DELETE_PHONE,
+{
+  update: (cache, {data}) => {
+    //читаем кэш   
+    const {Phones} = cache.readQuery({ query: GET_PHONES })
+   //удаляем запись из кэша
+    cache.writeQuery({ query: GET_PHONES,
+        data:{
+          Phones: Phones.filter(phone=>phone.id!==data.deletePhone.id)
+        }
+        } )
+  }
 }
+);
 
+//выполняем функцию мутацию
+runDeletePhone({
+    id
+  },/*{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
+  }*/
+)
+
+onError((e)=>{
+    console.log(e.message)
+  })
+}
 function setPhone(item) {
   // данная функция при режиме редактирования устанавливает в полях данные для редактирования
-  //вычисляем индекс и сохраняем в переменной
-  index.value = phones.value.indexOf(item);
+
   //для вывода данных в полях, выводим их в связных переменных
   newPhone.value = Object.assign({}, item);
+  delete  newPhone.value.__typename
   //включаем режим редактирования, появляются кнопки
   editmode.value = true;
 }
@@ -91,13 +190,13 @@ function setPhone(item) {
     <div v-if="loading">Загрузка...</div>
     <!--Вывод сообщения, если ошибка-->
     <div v-else-if="error">Ошибка: {{ error.message }}</div>
-    <ul v-else-if="result && result.Phones">
+    <table width="350px" v-else-if="result && result.Phones">
       <!-- Уже знакомый вывод списком-->
-      <li v-for="phone in result.Phones" :key="phone">
-        <a href="#" @click="setPhone(phone)">{{ phone.number }}</a>
-        {{ phone.name }}
-        <button @click="deletePhone(phone)">x</button>
-      </li>
-    </ul>
+      <tr v-for="phone in phones" :key="phone.id">
+        <td><a href="#" @click="setPhone(phone)">{{ phone.number }}</a></td>
+        <td>{{ phone.name }}</td>
+        <td><button @click="deletePhone(phone.id)">x</button></td>
+      </tr>
+    </table>
   </div>
 </template>

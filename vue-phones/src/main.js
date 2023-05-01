@@ -14,4 +14,4 @@ const app = createApp({
 
 app.mount("#app");
 
-//sudo ss -tulpn | grep :8080
+//sudo ss -tulpn | grep :
