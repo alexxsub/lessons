@@ -1,14 +1,8 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-//пример данных, массив с телефонами
-var _phones = [
-  { number: "5555", name: "John" },
-  { number: "6666", name: "Bill" },
-  { number: "7777", name: "Smith" },
-  { number: "1234", name: "Sara" }
-];
+
 // Описываем схему, используя sdl язык
-const typeDefs = `
+const typeDefs = `#graphql
   type Phone {
     """
     Номмер телефона
@@ -24,19 +18,16 @@ const typeDefs = `
   """
   type Query {
     Phones: [Phone]
-  }
-  """
-  Специальный тип данных для ввода
-  """
-  input inputPhone {
-    number: String!
-    name: String
-  }
-
-  type Mutation {
- 
-  }
+  } 
 `;
+
+//пример данных, массив с телефонами
+var _phones = [
+  { number: "5555", name: "John" },
+  { number: "6666", name: "Bill" },
+  { number: "7777", name: "Smith" },
+  { number: "1234", name: "Sara" }
+];
 
 // Описываем резолвер для метода просмотра
 const resolvers = {
