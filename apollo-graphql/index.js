@@ -33,10 +33,7 @@ var _phones = [
 const resolvers = {
   Query: {
     Phones: () => _phones
-  },
-  Mutation: {
   }
-
 };
 
 //регистрируем схему и резолверы
