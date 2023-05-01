@@ -7,7 +7,7 @@ var _phones = [
   { number: "7777", name: "Smith" },
   { number: "1234", name: "Sara" }
 ];
-// Описываем схему, используя sgl язык
+// Описываем схему, используя sdl язык
 const typeDefs = `
   type Phone {
     """
