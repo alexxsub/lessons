@@ -22,7 +22,7 @@ const typeDefs = `#graphql
 `;
 
 //пример данных, массив с телефонами
-var _phones = [
+const _phones = [
   { number: "5555", name: "John" },
   { number: "6666", name: "Bill" },
   { number: "7777", name: "Smith" },
