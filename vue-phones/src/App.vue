@@ -1,14 +1,16 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref,reactive, onMounted } from "vue";
+
+
 //Объявляем переменную реактивной
 const inputnumber = ref(null);
 //объявляем переменную для хранения новой записи
-const newPhone = ref({
+var newPhone = reactive({
   number: "",
   name: "",
 });
 //массив с данными, обычный массив и его тоже объявляем реактивным
-const phones = ref([]);
+const phones = reactive([]);
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
 //индекс редактируемого элемента 
@@ -16,23 +18,23 @@ const index = ref(-1);
 
 function addPhone() {
   //видимость переменных получаем без this
-  phones.value.push(newPhone.value); //нам не надо заботится о выводе новых данных
+  phones.push(newPhone); //нам не надо заботится о выводе новых данных
   //как только элемент будет добавлен в массив, он появится в списке
-  newPhone.value = { number: "", name: "" }; // затираем переменную ввода
+  newPhone = { number: "", name: "" }; // затираем переменную ввода
   inputnumber.value.focus(); //переносим фокус в поле номер
 }
 
 function savePhone() {
   //сохраняем данные, только если индекс имеется, т.е. >-1
   if (index.value > -1) {
-    Object.assign(phones.value[index.value], newPhone.value);
+    Object.assign(phones[index.value], newPhone);
     resetPhone(); //очищаем все поля
   }
 }
 
 function resetPhone() {
   //тут обнуляем переменные и приводим все в исходное состояние
-  newPhone.value = { number: "", name: "" }; // затираем переменную ввода
+  newPhone = { number: "", name: "" }; // затираем переменную ввода
   inputnumber.value.focus();
   editmode.value = false; //выключаем режим редактирования
   index.value = -1;
@@ -47,9 +49,9 @@ function deletePhone(item) {
 function setPhone(item) {
   // данная функция при режиме редактирования устанавливает в полях данные для редактирования
   //вычисляем индекс и сохраняем в переменной
-  index.value = phones.value.indexOf(item);
+  index.value = phones.indexOf(item);
   //для вывода данных в полях, выводим их в связных переменных
-  newPhone.value = Object.assign({}, item);
+  newPhone = Object.assign({}, item);
   //включаем режим редактирования, появляются кнопки
   editmode.value = true;
 }
@@ -70,6 +72,8 @@ onMounted(() => {
       name: "Маша",
     },
   ];
+  //доббавляем в демо данные id
+phones.value.map(i=>i.id=Date.now().toString(36) + Math.random().toString(36).slice(2));
 });
 </script>
 
@@ -93,7 +97,7 @@ onMounted(() => {
     <ul>
       <!-- Уже знакомый вывод списком-->
       <li v-for="phone in phones" :key="phone">
-        <a href="#" @click="setPhone(phone)">{{ phone.number }}</a>
+        <a href="#" @click="setPhone(phone)">{{ phone.id }} {{ phone.number }}</a>
         {{ phone.name }}
         <button @click="deletePhone(phone)">x</button>
       </li>
