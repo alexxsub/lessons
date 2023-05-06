@@ -1,4 +1,4 @@
-<script setup lang="js">
+<script setup>
 import { ref,reactive} from "vue";
 
 
@@ -39,10 +39,9 @@ function getID(){
 
 function addPhone() {
   
-  let newPhone=inputPhone
-  newPhone.id=getID()
+  inputPhone.id=getID()
   //видимость переменных получаем без this
-  phones.push(newPhone); //нам не надо заботится о выводе новых данных
+  phones.push(inputPhone); //нам не надо заботится о выводе новых данных
   //как только элемент будет добавлен в массив, он появится в списке
   resetPhone()
 }
