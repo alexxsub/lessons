@@ -1,9 +1,14 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import crypto  from 'crypto';
 
 // Описываем схему, используя sgl язык
 const typeDefs = `#graphql
   type Phone {
+   """
+    id записи
+    """
+    id: String
     """
     Номмер телефона
     """
@@ -23,6 +28,7 @@ const typeDefs = `#graphql
   Специальный тип данных для ввода
   """
   input inputPhone {
+    id:String
     number: String!
     name: String
   }
@@ -31,15 +37,15 @@ const typeDefs = `#graphql
   """
   Добавить запись телефона 
   """
-    addPhone(input: inputPhone): [Phone] #example with input type
+    addPhone(input: inputPhone): [Phone] 
   """
   Удалить запись о телефоне
   """
-    deletePhone(number: String): [Phone]
+    deletePhone(id: String): [Phone]
   """
   Обновить запись о телефоне
   """
-    updatePhone(number: String, name: String): [Phone] #example with separated params
+    updatePhone(input: inputPhone): [Phone] 
   }
 `;
 
@@ -51,6 +57,9 @@ var _phones = [
   { number: "1234", name: "Sara" }
 ];
 
+//доббавляем в демо данные id
+_phones.map(i=>i.id=crypto.randomBytes(16).toString("hex"));
+
 // Описываем резолвер для метода просмотра
 const resolvers = {
   Query: {
@@ -58,18 +67,17 @@ const resolvers = {
   },
   Mutation: {
     addPhone: (_, { input }) => {
+      input.id=crypto.randomBytes(16).toString("hex")
       _phones.push(input);
       return _phones;
     },
-    deletePhone: (_, { number }) => {
-      _phones.splice(_phones.findIndex(x => x.number === number), 1);
+    deletePhone: (_, { id }) => {
+      _phones.splice(_phones.findIndex(x => x.id === id), 1);
       return _phones;
     },
-    updatePhone: (_, { number, name }) => {
-      const numberi = _phones.findIndex(x => x.number === number);
-      const namei = _phones.findIndex(x => x.name === name);
-      const index = numberi > 0 ? numberi : namei;
-      _phones.splice(index, 1, { number: number, name: name });
+    updatePhone: (_, { input }) => {      
+      const index = _phones.findIndex(x => x.id === input.id);     
+      _phones.splice(index, 1,  input );
       return _phones;
     }
   }
