@@ -1,6 +1,7 @@
 <script setup>
-import { ref,reactive} from "vue";
-
+import { ref,reactive,computed} from "vue";
+import { useQuery, useMutation } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
 
 //Объявляем переменную реактивной
 const inputnumber = ref(null);
@@ -10,68 +11,114 @@ let inputPhone = reactive({
   name: "",
   id:""
 });
-//массив с данными, обычный массив и его тоже объявляем реактивным
-const phones = reactive( [
-    {
-      number: "8903888777666",
-      name: "Петя",
-    },
-    {
-      number: "8920888333222",
-      name: "Вася",
-    },
-    {
-      number: "8909222333888",
-      name: "Маша",
-    },
-  ]);
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
 
+const GET_PHONES = gql`
+      query getPhones {
+        Phones {
+          id
+          number
+          name
+        }
+      }
+    `;
 
+const { result,loading, error } = useQuery(GET_PHONES)
 
-  //доббавляем в демо данные id
-phones.map(i=>i.id=getID());
+const phones = computed(() => result.value?.Phones ?? [])
 
-function getID(){
-  return Date.now().toString(36) + Math.random().toString(36).slice(2)
-}
 
 function addPhone() {
-  
-  inputPhone.id=getID()
-  //видимость переменных получаем без this
-  phones.push(inputPhone); //нам не надо заботится о выводе новых данных
-  //как только элемент будет добавлен в массив, он появится в списке
-  resetPhone()
+//описываем на gql языке запрос на добавление
+const ADD_PHONE = gql`
+mutation addPhone ($input:inputPhone!) {
+  addPhone (input: $input) {
+          id,
+          number,
+          name
+        }
+}`
+const { mutate:runAddPhone,onDone } = useMutation(ADD_PHONE);
+runAddPhone({
+    input:inputPhone
+  },{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
+  }
+)
+//Обрабатываем событие успешного действия
+onDone(() => {
+      resetPhone(); //очищаем все поля
+    })
+
 }
 
 function savePhone() {
-  //сохраняем данные, только если id не пустой
-  if (inputPhone.id != '') {
-    const index=phones.findIndex(x => x.id === inputPhone.id)
-    phones.splice(index, 1, inputPhone);
-    resetPhone(); //очищаем все поля
+//описываем на gql языке запрос на обновление
+const UPDATE_PHONE = gql`
+mutation updatePhone ($input:inputPhone!) {
+  updatePhone (input: $input) {
+          id,
+          number,
+          name
+        }
+}`
+const { mutate:runUpdatePhone,onDone } = useMutation(UPDATE_PHONE);
+runUpdatePhone({
+    input: inputPhone
+  },{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
   }
+)
+//Обрабатываем событие успешного действия
+  onDone(() => {
+      resetPhone(); //очищаем все поля
+    })
+  
 }
+
 
 function resetPhone() {
   //тут обнуляем переменные и приводим все в исходное состояние
-  inputPhone={
-  number: "",
-  name: "",
-  id:""
-}
+  for (var key in inputPhone) { // затираем переменную ввода , перебирая все элементы
+    inputPhone[key]=""
+    }
   inputnumber.value.focus();
   editmode.value = false; //выключаем режим редактирования
 
 }
 
 function deletePhone(item) {
-  //ищем выбранный элемент массива и удаляем
-  const index = phones.indexOf(item);
-  
-  phones.splice(index, 1);
+//описываем на gql языке запрос на удаление
+const DELETE_PHONE = gql`
+mutation deletePhone ($id: String!) {
+  deletePhone (id: $id) {
+          id,
+          number,
+          name
+        }
+}`
+//создаем мутацию и функцию для вызова 
+const { mutate:runDeletePhone } = useMutation(DELETE_PHONE);
+//выполняем функцию мутацию
+runDeletePhone({
+    id: item.id,
+  },{
+    refetchQueries:[
+      {
+        query: GET_PHONES
+    }
+  ]
+  }
+)
 }
 
 function setPhone(item) {
@@ -79,6 +126,8 @@ function setPhone(item) {
  
   //для вывода данных в полях, выводим их в связных переменных
   inputPhone = Object.assign({}, item);
+  //удаляем системное поле
+  delete  inputPhone.__typename
   //включаем режим редактирования, появляются кнопки
   editmode.value = true;
 }
@@ -102,12 +151,17 @@ function setPhone(item) {
     />
     <button v-show="editmode" @click="savePhone">Сохранить</button>
     <button v-show="editmode" @click="resetPhone">Отмена</button>
-    <table width="350px">
+    <!--вывод сообщения, если загрузка-->
+    <div v-if="loading">Загрузка...</div>
+    <!--Вывод сообщения, если ошибка-->
+    <div v-else-if="error">Ошибка: {{ error.message }}</div>
+    <table  width="350px">
       <tr v-for="phone in phones" :key="phone.id">
         <td><a href="#" @click="setPhone(phone)">{{ phone.number }}</a></td>
         <td>{{ phone.name }}</td>
         <td><button @click="deletePhone(phone)">x</button></td>
       </tr>
     </table>
+   
   </div>
 </template>
