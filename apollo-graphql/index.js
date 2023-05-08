@@ -22,7 +22,7 @@ const typeDefs = `#graphql
   Получить список всех телефонов
   """
   type Query {
-    Phones: [Phone]
+    readPhones: [Phone]
   }
   """
   Специальный тип данных для ввода
@@ -37,7 +37,7 @@ const typeDefs = `#graphql
   """
   Добавить запись телефона 
   """
-    addPhone(input: inputPhone): [Phone] 
+    createPhone(input: inputPhone): [Phone] 
   """
   Удалить запись о телефоне
   """
@@ -63,10 +63,10 @@ _phones.map(i=>i.id=crypto.randomBytes(16).toString("hex"));
 // Описываем резолвер для метода просмотра
 const resolvers = {
   Query: {
-    Phones: () => _phones
+    readPhones: () => _phones
   },
   Mutation: {
-    addPhone: (_, { input }) => {
+    createPhone: (_, { input }) => {
       input.id=crypto.randomBytes(16).toString("hex")
       _phones.push(input);
       return _phones;
