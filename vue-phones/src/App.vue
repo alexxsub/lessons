@@ -45,7 +45,7 @@ runCreatePhone({
   },{
     refetchQueries:[
       {
-        query: GET_PHONES
+        query: READ_PHONES
     }
   ]
   }
@@ -73,7 +73,7 @@ runUpdatePhone({
   },{
     refetchQueries:[
       {
-        query: GET_PHONES
+        query: READ_PHONES
     }
   ]
   }
