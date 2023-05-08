@@ -114,7 +114,7 @@ runDeletePhone({
   },{
     refetchQueries:[
       {
-        query: GET_PHONES
+        query: READ_PHONES
     }
   ]
   }
