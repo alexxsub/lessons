@@ -88,7 +88,7 @@ runUpdatePhone({
 
 function resetPhone() {
   //тут обнуляем переменные и приводим все в исходное состояние
-  for (var key in inputPhone) { // затираем переменную ввода , перебирая все элементы
+  for (let key in inputPhone) { // затираем переменную ввода , перебирая все элементы
     inputPhone[key]=""
     }
   inputnumber.value.focus();
