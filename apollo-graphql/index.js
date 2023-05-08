@@ -1,6 +1,30 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import crypto  from 'crypto';
+import mongoose from 'mongoose';
+
+//описываем схему базы данных
+const PhoneSchema = new mongoose.Schema({
+  number: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  name: {
+    type: String,
+    required: true
+  }
+})
+
+//подключаемся к базе данных
+const Phone = mongoose.model('Phone', PhoneSchema)
+const MONGO_URI = 'mongodb://localhost:27017/PhoneBook'
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log(`🚀  Database started ${MONGO_URI}`))
+  .catch(err => console.error(err))
+
 
 // Описываем схему, используя sgl язык
 const typeDefs = `#graphql
@@ -8,7 +32,7 @@ const typeDefs = `#graphql
    """
     id записи
     """
-    id: String
+    id:ID
     """
     Номмер телефона
     """
@@ -28,7 +52,7 @@ const typeDefs = `#graphql
   Специальный тип данных для ввода
   """
   input inputPhone {
-    id:String
+    id:ID
     number: String!
     name: String
   }
@@ -37,48 +61,58 @@ const typeDefs = `#graphql
   """
   Добавить запись телефона 
   """
-    createPhone(input: inputPhone): [Phone] 
+    createPhone(input: inputPhone!): Phone 
   """
   Удалить запись о телефоне
   """
-    deletePhone(id: String): [Phone]
+    deletePhone(id: ID!): Phone
   """
   Обновить запись о телефоне
   """
-    updatePhone(input: inputPhone): [Phone] 
+    updatePhone(input: inputPhone!): Phone 
   }
 `;
-
-//пример данных, массив с телефонами
-var _phones = [
-  { number: "5555", name: "John" },
-  { number: "6666", name: "Bill" },
-  { number: "7777", name: "Smith" },
-  { number: "1234", name: "Sara" }
-];
-
-//доббавляем в демо данные id
-_phones.map(i=>i.id=crypto.randomBytes(16).toString("hex"));
 
 // Описываем резолвер для метода просмотра
 const resolvers = {
   Query: {
-    readPhones: () => _phones
+    readPhones: async () => {
+      const phones = await Phone.find()
+      // .limit(50)
+
+      return phones
+    }
   },
   Mutation: {
-    createPhone: (_, { input }) => {
-      input.id=crypto.randomBytes(16).toString("hex")
-      _phones.push(input);
-      return _phones;
+    createPhone:async (_, { input }) => {
+      console.log(input)
+      const res = await new Phone( {
+        number:input.number,
+        name:input.name
+      }).save()
+   
+      return res
     },
-    deletePhone: (_, { id }) => {
-      _phones.splice(_phones.findIndex(x => x.id === id), 1);
-      return _phones;
+    deletePhone: async (_, { id }) => {
+      const res = await Phone.findByIdAndRemove({
+        _id: id
+      })
+
+      return res
     },
-    updatePhone: (_, { input }) => {      
-      const index = _phones.findIndex(x => x.id === input.id);     
-      _phones.splice(index, 1,  input );
-      return _phones;
+    updatePhone:async (_, { input }) => {
+      const res = await Phone.findOneAndUpdate({
+        _id: input.id
+      }, {
+        $set: {
+          number: input.number,
+          name: input.name
+        }
+      }, {
+        new: true
+      }
+      )
+      return res
     }
   }
 

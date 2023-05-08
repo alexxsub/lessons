@@ -1,8 +1,8 @@
 .DS_Store
 node_modules
-/dist
+dist
+data
 
-package-lock.json
 
 # local env files
 .env.local
@@ -21,3 +21,4 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+apollo-graphql/package-lock.json
