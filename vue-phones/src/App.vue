@@ -14,9 +14,9 @@ let inputPhone = reactive({
 //флаг режима, режим true - правка данных, false -ввод новых
 const editmode = ref(false);
 
-const GET_PHONES = gql`
-      query getPhones {
-        Phones {
+const READ_PHONES = gql`
+      query  {
+        readPhones {
           id
           number
           name
@@ -24,23 +24,23 @@ const GET_PHONES = gql`
       }
     `;
 
-const { result,loading, error } = useQuery(GET_PHONES)
+const { result,loading, error } = useQuery(READ_PHONES)
 
-const phones = computed(() => result.value?.Phones ?? [])
+const phones = computed(() => result.value?.readPhones ?? [])
 
 
 function addPhone() {
 //описываем на gql языке запрос на добавление
-const ADD_PHONE = gql`
-mutation addPhone ($input:inputPhone!) {
-  addPhone (input: $input) {
+const CREATE_PHONE = gql`
+mutation createPhone ($input:inputPhone!) {
+  createPhone (input: $input) {
           id,
           number,
           name
         }
 }`
-const { mutate:runAddPhone,onDone } = useMutation(ADD_PHONE);
-runAddPhone({
+const { mutate:runCreatePhone,onDone } = useMutation(CREATE_PHONE);
+runCreatePhone({
     input:inputPhone
   },{
     refetchQueries:[
