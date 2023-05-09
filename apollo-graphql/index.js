@@ -1,6 +1,5 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import crypto  from 'crypto';
 import mongoose from 'mongoose';
 
 //описываем схему базы данных
@@ -61,7 +60,7 @@ const typeDefs = `#graphql
   """
   Добавить запись телефона 
   """
-    createPhone(input: inputPhone!): Phone 
+    createPhone(input: inputPhone): Phone 
   """
   Удалить запись о телефоне
   """
@@ -69,7 +68,7 @@ const typeDefs = `#graphql
   """
   Обновить запись о телефоне
   """
-    updatePhone(input: inputPhone!): Phone 
+    updatePhone(input: inputPhone): Phone 
   }
 `;
 
