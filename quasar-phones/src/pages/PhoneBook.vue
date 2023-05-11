@@ -4,21 +4,21 @@ import { reactive,computed,watch } from 'vue';
 import { useQuasar, useDialogPluginComponent,Notify } from 'quasar'
 //клиент Apollo вариант 1
 import {apolloClient} from 'boot/apollo'
-
 //клиент Apollo  в варианте 2 
 import { useQuery } from '@vue/apollo-composable'
+
 //для языка sdl
 import gql from 'graphql-tag'
 
 //глобальная переменная на простраство квазар
 const $q = useQuasar()
 
-//состояние приложения
+//объект состояния приложения
 const state = reactive({     
-      loading: false,
-      filter:'',
-      formTitle:'Добавить телефон',
-      editedItem:{
+      loading: false, //статус активного запроса
+      filter:'',//строка фильтра
+      formTitle:'Добавить телефон', //заголовок формы редактирования
+      inputPhone:{  //объект ввода данных
         id:'',
         number:'',
         name:''
@@ -26,9 +26,9 @@ const state = reactive({
   });
 
 
-const GET_PHONES = gql`
-      query getPhones {
-        Phones {
+const READ_PHONES = gql`
+      query readPhones {
+        readPhones {
           id,
           number
           name
@@ -36,16 +36,16 @@ const GET_PHONES = gql`
       }
     `;
  //описываем на gsdl языке запрос на добавление
-const ADD_PHONE = gql`
-mutation addPhone ($input:inputPhone!) {
-  addPhone (input: $input) {
+const CREATE_PHONE = gql`
+mutation createPhone ($input:inputPhone!) {
+  createPhone (input: $input) {
           id,
           number,
           name
         }
 }`;
 //описываем на sdl языке запрос на обновление
-//в качестве входного параметра объект по структуре как state.editedItem
+//в качестве входного параметра объект по структуре как state.inputPhone
 const UPDATE_PHONE = gql`
 mutation updatePhone ($input:inputPhone!) {
   updatePhone (input: $input) {
@@ -57,23 +57,26 @@ mutation updatePhone ($input:inputPhone!) {
 
 
 
-const { result,loading } = useQuery(GET_PHONES)
+//читаем данные 
+const { result,loading } = useQuery(READ_PHONES)
+
+//обновляем статус загрузки
 watch(loading,(value) =>{
   state.loading=value
 })
 
 
 //массив с данными получаем с сервера  как результат выполнения запроса
-const phones = computed(() => result.value?.Phones ?? [])
+const phones = computed(() => result.value?.readPhones ?? [])
 
-    const columns = [
+//описание столбцов таблицы
+const columns = [
  
         {
             align: 'left',
             field: 'number',
             label: 'Телефон',
             name: 'number',
-        
             style: 'width: 40%;',
             sortable: true
         },
@@ -111,14 +114,14 @@ const deletePhone = async (variables) =>
             mutation: DELETE_PHONE,
             variables,
             update: (cache, {data}) => {
-                //читаем кэш   
-                const {Phones} = cache.readQuery({ query: GET_PHONES })
+                //читаем кэш            
+                const {readPhones} = cache.readQuery({ query: READ_PHONES })
                 //удаляем запись из кэша
-                cache.writeQuery({ query: GET_PHONES,
-                data:{
-                    //перебираем массив и при совпадении id удаляем элемент из массива кэша
-                    Phones: Phones.filter(phone=>phone.id!==data.deletePhone.id)
-                    }
+                cache.writeQuery({ query: READ_PHONES,
+                    data:{
+                        //перебираем массив и при совпадении id удаляем элемент из массива кэша
+                        readPhones: readPhones.filter(phone=>phone.id!==data.deletePhone.id)
+                       }
                       })
                   }
             })
@@ -143,8 +146,15 @@ function deleteRow(id){
   $q.dialog({
         title:'Удаление записи',
         message: 'Уверены, что хотите удалить запись?',
-        ok:'Да',
-        cancel: true,
+        focus: 'cancel',
+        ok:{
+          label:'Да',
+          color:'positive'
+        },
+        cancel:{
+          label:'Нет',
+          color:'negative'
+        }
         //persistent: true //выключить закрытие диалога по esc
       }).onOk(() => deletePhone({id}))
 }
@@ -152,19 +162,19 @@ function deleteRow(id){
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
    
  
-
-  const handleClickOk = () => {
+//обработка события на диалоге
+const handleClickOk = () => {
   
-    if (state.editedItem.id=='') 
+    if (state.inputPhone.id=='') 
       addPhone(
           {
-            input:state.editedItem
+            input:state.inputPhone
           }
             );
     else 
       updatePhone(
           {
-            input:state.editedItem
+            input:state.inputPhone
           }
             );
 
@@ -185,26 +195,25 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
 const addPhone = async (variables) =>
     apolloClient
         .mutate({
-            mutation: ADD_PHONE,
+            mutation: CREATE_PHONE,
             variables,
-            update: (cache,{ data: {addPhone } }) => {
-              let data = cache.readQuery({ query: GET_PHONES })
+            update: (cache,{ data: {createPhone } }) => {
+                  
+                  //https://www.apollographql.com/docs/react/local-state/local-state-management
+                  //https://v4.apollo.vuejs.org/guide-composable/mutation.html#making-all-other-cache-updates
 
-                  data = {
-                  ...data,
-                  Phones: [
-                    ...data.Phones,
-                    addPhone,
-                  ],
-                  }
-                  cache.writeQuery({ query: GET_PHONES, data }) 
+                  const data = cache.readQuery({ query: READ_PHONES })
+                  cache.writeQuery({ query: READ_PHONES,
+                  data:{
+                    readPhones:[...data.readPhones,createPhone]
+                  }  }) 
 
                 }
             })
         .then((response) =>{ 
               $q.notify({
              
-              message: `Запись ${response.data?.addPhone.number} добавлена!`,
+              message: `Запись ${response.data?.createPhone.number} добавлена!`,
               color: 'positive',
               icon: 'done'
               })
@@ -252,16 +261,16 @@ function addRow(){
 
 function editRow(row){
   //передаем в объект редактирования запись из таблицы, что параметром прила
-  state.editedItem=Object.assign({}, row);
+  state.inputPhone=Object.assign({}, row);
   //удаляем лишнее поле, которое служебное, но не описано в типе ввода input
-  delete  state.editedItem.__typename
+  delete  state.inputPhone.__typename
   //меняем подпись диалога
   state.formTitle = 'Редактировать запись'
   dialogRef.value.show()
 };
 function resetPhone() {
-  for (var key in state.editedItem) { // затираем объект редактирования , перебирая все элементы
-      state.editedItem[key]=""
+  for (var key in state.inputPhone) { // затираем объект редактирования , перебирая все элементы
+      state.inputPhone[key]=""
     }
 
 };
@@ -338,7 +347,7 @@ function resetPhone() {
               <q-input
                        square
                        clearable
-                       v-model="state.editedItem.number"
+                       v-model="state.inputPhone.number"
                        lazy-rules
                        :rules="[]"
                        label="Телефон">
@@ -349,7 +358,7 @@ function resetPhone() {
                <q-input
                        square
                        clearable
-                       v-model="state.editedItem.name"
+                       v-model="state.inputPhone.name"
                        lazy-rules
                        :rules="[]"
                        label="Имя">
