@@ -1,6 +1,7 @@
 <script setup>
 
 import { reactive,computed,watch } from 'vue';
+//использование плагинов
 import { useQuasar, useDialogPluginComponent,Notify } from 'quasar'
 //клиент Apollo вариант 1
 import {apolloClient} from 'boot/apollo'
@@ -10,11 +11,24 @@ import { useQuery } from '@vue/apollo-composable'
 //для языка sdl
 import gql from 'graphql-tag'
 
+//подключаем диалог из плагина, будем спрашивать удаление
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+
 //глобальная переменная на простраство квазар
 const $q = useQuasar()
 
+//настраиваемая подпись кнопки добавить от размера экрана
+const btnAddLabel = computed(() => {
+  if($q.screen.name=='xs') 
+      return ''
+    else 
+      return 'Добавить запись'
+});
+
+
 //объект состояния приложения
 const state = reactive({     
+  
       loading: false, //статус активного запроса
       filter:'',//строка фильтра
       formTitle:'Добавить телефон', //заголовок формы редактирования
@@ -25,7 +39,36 @@ const state = reactive({
       }
   });
 
+//описание столбцов таблицы
+const columns = [
+ 
+ {
+     align: 'left',
+     field: 'number',
+     label: 'Телефон',
+     name: 'number',
+     style: 'width: 40%;',
+     sortable: true
+ },
+ {
+     align: 'left',
+     field: 'name',
+     label: 'Имя',
+     name: 'name',
+     style: 'width: 40%;',
+     sortable: true
+ },
+ {
+   name: 'actions',
+   label: '',
+   field: 'actions',
+   style: 'width: 20%'
+ }
+];
 
+
+//Описание GraphQL запросы на sdl языке
+//sdl запрос на чтение
 const READ_PHONES = gql`
       query readPhones {
         readPhones {
@@ -35,7 +78,7 @@ const READ_PHONES = gql`
         }
       }
     `;
- //описываем на gsdl языке запрос на добавление
+//описываем на sdl языке запрос на добавление
 const CREATE_PHONE = gql`
 mutation createPhone ($input:inputPhone!) {
   createPhone (input: $input) {
@@ -55,9 +98,18 @@ mutation updatePhone ($input:inputPhone!) {
         }
 }`;
 
+//описываем на sdl языке запрос на удаление
+const DELETE_PHONE = gql`
+mutation deletePhone ($id: ID!) {
+  deletePhone (id: $id) {
+          id,
+          number,
+          name
+        }
+}`;
 
 
-//читаем данные 
+//читаем данные, запрос на бэкенд 
 const { result,loading } = useQuery(READ_PHONES)
 
 //обновляем статус загрузки
@@ -69,43 +121,6 @@ watch(loading,(value) =>{
 //массив с данными получаем с сервера  как результат выполнения запроса
 const phones = computed(() => result.value?.readPhones ?? [])
 
-//описание столбцов таблицы
-const columns = [
- 
-        {
-            align: 'left',
-            field: 'number',
-            label: 'Телефон',
-            name: 'number',
-            style: 'width: 40%;',
-            sortable: true
-        },
-        {
-            align: 'left',
-            field: 'name',
-            label: 'Имя',
-            name: 'name',
-            style: 'width: 40%;',
-            sortable: true
-        },
-        {
-          name: 'actions',
-          label: '',
-          field: 'actions',
-          style: 'width: 20%'
-        }
-    ];
-
-
-//описываем на sdl языке запрос на удаление
-const DELETE_PHONE = gql`
-mutation deletePhone ($id: ID!) {
-  deletePhone (id: $id) {
-          id,
-          number,
-          name
-        }
-}`;
 
 //запрос к бэкенду через Apollo клиент
 const deletePhone = async (variables) =>
@@ -113,7 +128,15 @@ const deletePhone = async (variables) =>
         .mutate({
             mutation: DELETE_PHONE,
             variables,
-            update: (cache, {data}) => {
+            update:(cache,{ data })=>{
+              cache.updateQuery({query: READ_PHONES},
+              (cache) => ( {
+                  ...cache,
+                    readPhones: cache.readPhones.filter((i) => i.id !== data.deletePhone.id),
+                   })
+                    )
+            },
+            /*update: (cache, {data}) => {
                 //читаем кэш            
                 const {readPhones} = cache.readQuery({ query: READ_PHONES })
                 //удаляем запись из кэша
@@ -123,7 +146,7 @@ const deletePhone = async (variables) =>
                         readPhones: readPhones.filter(phone=>phone.id!==data.deletePhone.id)
                        }
                       })
-                  }
+                  }*/
             })
         .then((response) => 
               $q.notify({
@@ -159,10 +182,10 @@ function deleteRow(id){
       }).onOk(() => deletePhone({id}))
 }
 
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+
    
  
-//обработка события на диалоге
+//обработка события на диалоге редактирования
 const handleClickOk = () => {
   
     if (state.inputPhone.id=='') 
@@ -180,9 +203,9 @@ const handleClickOk = () => {
 
       
     };
-    const handleClickCancel = () => {
+const handleClickCancel = () => {
       onDialogCancel()
-      //вариант создания уведомление через экземпляр класса
+      //вариант создания уведомления через экземпляр класса
       Notify.create({
               message: 'Заапись не сохранена!',
               color: 'negative',
@@ -196,7 +219,7 @@ const addPhone = async (variables) =>
     apolloClient
         .mutate({
             mutation: CREATE_PHONE,
-            variables,
+            variables,   
             update: (cache,{ data: {createPhone } }) => {
                   
                   //https://www.apollographql.com/docs/react/local-state/local-state-management
@@ -211,8 +234,7 @@ const addPhone = async (variables) =>
                 }
             })
         .then((response) =>{ 
-              $q.notify({
-             
+              $q.notify({          
               message: `Запись ${response.data?.createPhone.number} добавлена!`,
               color: 'positive',
               icon: 'done'
@@ -228,6 +250,8 @@ const addPhone = async (variables) =>
             })
           });
 
+//обновление записи
+// variables - входящий параметр - state.inputPhone
 const updatePhone = async (variables) =>
     apolloClient
         .mutate({
@@ -252,9 +276,9 @@ const updatePhone = async (variables) =>
           });
 
 function addRow(){
-  //обнуляем данные редактирования
+  //обнуляем данные редактирования, у нас новая запись
   resetPhone()
-  //меняем подпись диалога
+  //меняем заголовок диалога
   state.formTitle = 'Добавить запись'
   dialogRef.value.show()
 };
@@ -264,10 +288,12 @@ function editRow(row){
   state.inputPhone=Object.assign({}, row);
   //удаляем лишнее поле, которое служебное, но не описано в типе ввода input
   delete  state.inputPhone.__typename
-  //меняем подпись диалога
+  //меняем заголовок диалога
   state.formTitle = 'Редактировать запись'
   dialogRef.value.show()
 };
+
+//обнуляем состояние приложения
 function resetPhone() {
   for (var key in state.inputPhone) { // затираем объект редактирования , перебирая все элементы
       state.inputPhone[key]=""
@@ -275,32 +301,36 @@ function resetPhone() {
 
 };
 </script>
-<template>
-<div class="q-pa-md">
- <q-layout view="lhh LpR lff" container style="height: 600px" class="shadow-2 rounded-borders">
-    
-  <q-page-container>
-   <q-page padding>
-      <q-table
-      title="Телефонная книга"
+<template>  
+    <q-page >
+      <q-table 
+      :columns="columns"
       :loading="state.loading"
       :filter="state.filter"
       :rows="phones"
-      :columns="columns"
-      row-key="id"
-      no-data-label="Нет даттых"
+      no-data-label="Нет данных"
       no-results-label = "Ничего не найдено"
+      style="height: 93vh"
     >
     <!--кастомный заголовок таблицы, чтобы вставить поле поиска-->
     <template v-slot:top>
-      <q-toolbar-title>Телефонная книга</q-toolbar-title>
-          <q-input  dense debounce="300" color="primary" v-model="state.filter">
-          <template v-slot:append>
+     <!-- <q-toolbar-title>Телефонная книга</q-toolbar-title> -->
+      <q-input  dense debounce="300" color="primary" v-model="state.filter">
+        <template v-slot:append>
             <q-icon name="search"></q-icon>
-          </template>
-        </q-input>
+        </template>
+      </q-input>
+        <q-space />
+        <q-btn
+          color="primary"
+          icon="add"
+          :label="btnAddLabel"   
+          @click="addRow"
+        />
     </template>
+  
   <!--кастомный шаблон заголовков таблицы, чтобы вставить столбец с кнопкой удалить-->
+  <!---
     <template v-slot:header="props">
         <q-tr :props="props">
           <q-th
@@ -312,6 +342,7 @@ function resetPhone() {
           </q-th>
         </q-tr>
       </template>
+    -->
       <!--кастомный шаблон тела таблицы, чтобы сделать в ячейке телефона ссылку-->
       <template v-slot:body="props">
       <q-tr :props="props">
@@ -322,22 +353,20 @@ function resetPhone() {
               {{ props.row.name }}
         </q-td>
          <q-td key="actions" :props="props">
-              <q-btn size="sm" color="red" round icon="delete" @click="deleteRow(props.row.id)"></q-btn>
+              <q-btn  color="red" round icon="delete" @click="deleteRow(props.row.id)"></q-btn>
             </q-td>
-        </q-tr>
-       
+        </q-tr>       
     </template>
   </q-table>
-  <!--круглая кнопка в правом углу с отступом offset-->
-  <q-page-sticky position="bottom-right" :offset="[18, 18]">
-            <q-btn fab icon="add" color="accent" @click="addRow" />
-          </q-page-sticky>
+  <!--круглая кнопка в правом углу с отступом offset
+  <q-page-sticky position="bottom-right" :offset="[18, 58]">
+      <q-btn fab icon="add" color="accent" @click="addRow" />
+  </q-page-sticky>
+-->
 </q-page>
-</q-page-container>
-</q-layout>
 
-</div>
-<!--Шаблон диалога скрыт и не рендирится при визуализации, вызывается из кода-->
+
+<!--Шаблон диалога скрыт и не отображается, вызывается из кода-->
 <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card class="q-dialog-plugin">
       <div class="q-pa-md" style="max-width: 500px">
